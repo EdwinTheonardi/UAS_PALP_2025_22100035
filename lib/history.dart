@@ -130,10 +130,10 @@ class _HistoryPageState extends State<HistoryPage> {
                                         icon: Icon(Icons.delete, color: Colors.lightBlue),
                                         tooltip: "Hapus History",
                                         onPressed: () async {
-                                          // _showDeleteConfirmationDialog(
-                                          //   context,
-                                          //   _allProducts[index].reference,
-                                          // );
+                                          _showDeleteConfirmationDialog(
+                                            context,
+                                            _allHistory[index].reference,
+                                          );
                                         },
                                       ),
                                     ],
@@ -148,5 +148,39 @@ class _HistoryPageState extends State<HistoryPage> {
         ],
       ),
     );
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, DocumentReference ref) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Konfirmasi'),
+        content: Text('Yakin ingin menghapus history ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Hapus', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      try {
+        await ref.delete();
+        await _loadHistory();
+      } catch (e) {
+        print("Gagal menghapus history: $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal menghapus history: $e')),
+          );
+        }
+      }
+    }
   }
 }
