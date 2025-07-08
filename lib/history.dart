@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({ super.key });
@@ -98,7 +99,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                         ),
                                         SizedBox(height: 4),
                                         Text(
-                                          'Tanggal Ambil: ${history['tanggal_ambil'] ?? '-'}',
+                                          'Tanggal Ambil: ${history['tanggal_ambil'] != null ? DateFormat('dd/MM/yyyy').format((history['tanggal_ambil'] as Timestamp).toDate()) : '-'}',
                                           style: TextStyle(
                                             fontSize: 16,
                                             color: Colors.grey[700],
