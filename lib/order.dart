@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class HelmServiceList extends StatelessWidget {
@@ -62,11 +63,32 @@ class PemesananForm extends StatefulWidget {
 
 class _PemesananFormState extends State<PemesananForm> {
   final _formKey = GlobalKey<FormState>();
-  int jumlahHelm = 1;
+  final _jumlahController = TextEditingController();
+  final _namaController = TextEditingController();
+  final _kontakController = TextEditingController();
   DateTime? tanggalAmbil;
-  String nama = '';
-  String kontak = '';
-  String tipePembayaran = 'Tunai';
+  String? _selectedTipePembayaran;
+
+  Future<void> _saveHistory() async {
+    if (!_formKey.currentState!.validate() ||
+        tanggalAmbil == null) {
+      return;
+    }
+
+    final history = {
+      'jumlah': _jumlahController.text.trim(),
+      'nama': _namaController.text.trim(),
+      'no_hp': _kontakController.text.trim(),
+      'tanggal_ambil': tanggalAmbil,
+      'tipe_pembayaran': _selectedTipePembayaran,
+    };
+
+    final historyDoc = await FirebaseFirestore.instance
+        .collection('orderHistory')
+        .add(history);
+
+    if (mounted) Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,8 +102,7 @@ class _PemesananFormState extends State<PemesananForm> {
               TextFormField(
                 decoration: InputDecoration(labelText: 'Jumlah Helm'),
                 keyboardType: TextInputType.number,
-                onSaved: (value) =>
-                    jumlahHelm = int.tryParse(value ?? '1') ?? 1,
+                controller: _jumlahController,
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Wajib diisi' : null,
               ),
@@ -106,22 +127,22 @@ class _PemesananFormState extends State<PemesananForm> {
               ),
               TextFormField(
                 decoration: InputDecoration(labelText: 'Nama'),
-                onSaved: (value) => nama = value ?? '',
+                controller: _namaController,
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Wajib diisi' : null,
               ),
               TextFormField(
                 decoration: InputDecoration(labelText: 'No Hp'),
-                onSaved: (value) => kontak = value ?? '',
+                controller: _kontakController,
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Wajib diisi' : null,
               ),
               DropdownButtonFormField<String>(
-                value: tipePembayaran,
+                value: _selectedTipePembayaran,
                 items: ['Tunai', 'Transfer', 'QRIS']
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
-                onChanged: (val) => setState(() => tipePembayaran = val!),
+                onChanged: (val) => setState(() => _selectedTipePembayaran = val!),
                 decoration: InputDecoration(labelText: 'Tipe Pembayaran'),
               ),
             ],
@@ -132,17 +153,7 @@ class _PemesananFormState extends State<PemesananForm> {
         TextButton(
             onPressed: () => Navigator.pop(context), child: Text('Batal')),
         ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate() && tanggalAmbil != null) {
-                _formKey.currentState!.save();
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(
-                      'Pesanan ke ${widget.shopName} disimpan!\nJumlah Helm: $jumlahHelm\nTgl Ambil: ${tanggalAmbil!.toLocal()}'
-                          .split(' ')[0]),
-                ));
-              }
-            },
+            onPressed: _saveHistory,
             child: Text('Kirim')),
       ],
     );
