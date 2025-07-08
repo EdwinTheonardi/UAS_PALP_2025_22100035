@@ -115,15 +115,11 @@ class _HistoryPageState extends State<HistoryPage> {
                                         icon: Icon(Icons.edit, color: Colors.lightBlue),
                                         tooltip: "Edit History",
                                         onPressed: () async {
-                                          // final updated = await Navigator.push(
-                                          //   context,
-                                          //   MaterialPageRoute(
-                                          //     builder: (context) => EditProductPage(
-                                          //       productRef: _allProducts[index].reference,
-                                          //     ),
-                                          //   ),
-                                          // );
-                                          // await _loadProductsForStore();
+                                          showDialog(
+                                            context: context,
+                                            builder: (ctx) => EditPemesananForm(historyRef: _allHistory[index].reference),
+                                          );
+                                          await _loadHistory();
                                         },
                                       ),
                                       IconButton(
@@ -182,5 +178,140 @@ class _HistoryPageState extends State<HistoryPage> {
         }
       }
     }
+  }
+}
+
+class EditPemesananForm extends StatefulWidget {
+  final DocumentReference historyRef;
+
+  EditPemesananForm({required this.historyRef});
+
+  @override
+  _EditPemesananFormState createState() => _EditPemesananFormState();
+}
+
+class _EditPemesananFormState extends State<EditPemesananForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _jumlahController = TextEditingController();
+  final _namaController = TextEditingController();
+  final _kontakController = TextEditingController();
+  DateTime? tanggalAmbil;
+  String? _selectedTipePembayaran;
+
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final historySnap = await widget.historyRef.get();
+      if (!historySnap.exists) return;
+
+      final historyData = historySnap.data() as Map<String, dynamic>;
+
+      setState(() {
+        _jumlahController.text = historyData['jumlah'] ?? '';
+        _namaController.text = historyData['nama'] ?? '';
+        _kontakController.text = historyData['no_hp'] ?? '';
+        tanggalAmbil = (historyData['tanggal_ambil'] as Timestamp).toDate();
+        _selectedTipePembayaran = historyData['tipe_pembayaran'] ?? '';
+
+        _loading = false; 
+      });
+    } catch (e) {
+      debugPrint('Error loading history data: $e');
+    }
+  }
+
+  Future<void> _updateHistory() async {
+    if (!_formKey.currentState!.validate() ||
+        tanggalAmbil == null) {
+      return;
+    }
+
+    final updatedData = {
+      'jumlah': _jumlahController.text.trim(),
+      'nama': _namaController.text.trim(),
+      'no_hp': _kontakController.text.trim(),
+      'tanggal_ambil': tanggalAmbil,
+      'tipe_pembayaran': _selectedTipePembayaran,
+    };
+
+    await widget.historyRef.update(updatedData);
+
+    if (mounted) Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Edit History'),
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                decoration: InputDecoration(labelText: 'Jumlah Helm'),
+                keyboardType: TextInputType.number,
+                controller: _jumlahController,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Wajib diisi' : null,
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now().add(Duration(days: 1)),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(Duration(days: 30)),
+                  );
+                  if (picked != null) {
+                    setState(() => tanggalAmbil = picked);
+                  }
+                },
+                child: Text(
+                  tanggalAmbil == null
+                      ? 'Pilih Tanggal Ambil'
+                      : 'Ambil: ${DateFormat('yyyy-MM-dd').format(tanggalAmbil!)}',
+                ),
+              ),
+              TextFormField(
+                decoration: InputDecoration(labelText: 'Nama'),
+                controller: _namaController,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Wajib diisi' : null,
+              ),
+              TextFormField(
+                decoration: InputDecoration(labelText: 'No Hp'),
+                controller: _kontakController,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Wajib diisi' : null,
+              ),
+              DropdownButtonFormField<String>(
+                value: _selectedTipePembayaran,
+                items: ['Tunai', 'Transfer', 'QRIS']
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                onChanged: (val) => setState(() => _selectedTipePembayaran = val!),
+                decoration: InputDecoration(labelText: 'Tipe Pembayaran'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(context), child: Text('Batal')),
+        ElevatedButton(
+            onPressed: _updateHistory,
+            child: Text('Update History')),
+      ],
+    );
   }
 }
