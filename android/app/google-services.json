@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "607824099473",
-    "project_id": "palpnote",
-    "storage_bucket": "palpnote.firebasestorage.app"
+    "project_number": "534298912541",
+    "project_id": "uas-palp-3f97b",
+    "storage_bucket": "uas-palp-3f97b.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:607824099473:android:40115bf7db3b57daea6730",
+        "mobilesdk_app_id": "1:534298912541:android:7b92fc6539e60737a423f4",
         "android_client_info": {
-          "package_name": "com.example.flutter_application_1"
+          "package_name": "com.company.uas_palp"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyA8aSXgLkH_PVoF0-lzrzzxDlA8BIVlIuM"
+          "current_key": "AIzaSyAd8MOKjpeF8klkmoMwASdqmg2TKgT0Yi8"
         }
       ],
       "services": {
