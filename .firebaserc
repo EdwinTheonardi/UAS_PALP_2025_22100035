@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "flutterapp1-275ee"
-  }
+    "default": "uas-palp-3f97b",
+    "staging": "uas-palp-3f97b"
+  },
+  "targets": {},
+  "etags": {}
 }
